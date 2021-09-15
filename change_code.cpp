@@ -18,7 +18,7 @@ change_code::change_code(int argc, char* argv[])
 
 change_code::~change_code()
 {
-
+    
 }
 
 void change_code::help_print()
