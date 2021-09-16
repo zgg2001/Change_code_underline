@@ -14,6 +14,7 @@ using namespace std;
 int main(int argc, char* argv[])
 {
     change_code *object = new change_code(argc, argv);
+    object->change();
     return 0;
 }
 
