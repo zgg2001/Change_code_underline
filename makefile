@@ -1,8 +1,13 @@
 #makefile
 
-line: main.cpp change_code.h change_code.cpp
-	g++ main.cpp change_code.h change_code.cpp -o line
+line: main.o change_code.o
+	g++ main.o change_code.o -o line
+	find ./ -maxdepth 1 -regex ".*.o" | xargs rm
+main.o: main.cpp
+	g++ -c main.cpp -o main.o
+change_code.o: change_code.cpp
+	g++ -c change_code.cpp -o change_code.o
 
 .PHONY: clean
 clean:
-	rm line
+	find ./ -maxdepth 1 -regex ".*.o" -or -name line | xargs rm
