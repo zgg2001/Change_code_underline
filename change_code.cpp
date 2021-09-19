@@ -141,11 +141,6 @@ bool change_code::_change_content(string& temp)
                 temp = t;
                 break;
             }
-            //去多空格
-            if(c == ' ' && (temp.empty() || temp[temp.size()-1] == ' '))
-            {
-                //continue;
-            }
             //双引号内字符串不能修改
             if(c == 34)
             {
@@ -168,6 +163,11 @@ bool change_code::_change_content(string& temp)
                 _change_word_to_underline(word);
                 temp += _words[word];
                 word.clear();
+            }
+            //去多空格
+            if(c == ' ' && (temp.empty() || temp[temp.size()-1] == ' '))
+            {
+                continue;
             }
             temp += c;
         }
