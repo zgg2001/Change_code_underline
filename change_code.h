@@ -8,6 +8,7 @@
 #ifndef _CHANGE_CODE_H_
 #define _CHANGE_CODE_H_
 
+#include<cstring>
 #include<iostream>
 #include<fstream>
 #include<vector>
@@ -42,7 +43,8 @@ protected:
 
 protected:
     //判定参数数量
-    virtual bool _argument_number_judge(int argc) { return argc == 3; }
+    virtual bool _argument_number_judge(int argc) 
+    { return argc == 3 || argc == 4; }
     //当参数有误时输出提示信息
     virtual void _argument_number_error_print();
     //输入文件打开读取出现问题的提示
@@ -55,6 +57,10 @@ protected:
 private:
     //当此值为false时 说明初始化失败
     bool _state = true;
+    //是否删除注释 -d参数 默认不删除
+    bool _delete_notes = false;
+    //当前是否属于/**/注释中
+    bool _notes_now = false;
     //储存文件中的内容
     vector<string> _content;
     //储存define语句

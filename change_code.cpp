@@ -10,13 +10,16 @@
 change_code::change_code(int argc, char* argv[])
 {
     //如果参数数量不对则输出help信息
-    if(_argument_number_judge(argc) == false)
+    if(_argument_number_judge(argc) == false || (argc == 4 && strcmp("-d", argv[3])))
     {
         _state = false;
         _argument_number_error_print();
     }
     else
     {
+        //是否有-d参数
+        if(argc == 4)
+            _delete_notes = true;
         //确定输入输出文件
         set_input_file(argv[1]);
         set_output_file(argv[2]);
@@ -98,13 +101,15 @@ bool change_code::_write_content_to_file()
     if(outfile.is_open())
     {
         //输出内容
-        for(string s : _defines)
+        for(string& s : _defines)
         {
-            outfile << s << endl;
+            if(!s.empty())
+                outfile << s << endl;
         }
-        for(string s : _content)
+        for(string& s : _content)
         {
-            outfile << s << endl;
+            if(!s.empty())
+                outfile << s << endl;
         }
         outfile.close();
     }
@@ -123,26 +128,60 @@ bool change_code::_change_content(string& temp)
     temp.clear();
     word.clear();
 
-    for(char c : t)
+    int t_size = t.size() - 1;
+    for(int c = 0; c <= t_size; ++c)
     {
         //判定是否为数字/字母/下划线
-        if(_judge_number_letter_underline(c) == true)
+        if(_judge_number_letter_underline(t[c]) == true)
         {
+            if(_notes_now)//注释中
+                continue;
             if(state_mark2 == false && state_mark1 == false)
-                word += c;
+                word += t[c];
             else
-                temp += c;
+                temp += t[c];
         }
         else
         {
+            //删除注释相关
+            if(_delete_notes == true)
+            {
+                if(_notes_now)//注释中
+                {
+                    if(t[c] == '*' && c != t_size && t[c+1] == '/')// */
+                    {
+                        _notes_now = false;
+                        ++c;
+                        continue;
+                    }
+                }
+                else
+                {
+                    if(t[c] == '/' && c < t_size && t[c+1] == '/')// //
+                    {
+                        if(!word.empty())
+                        {
+                            _change_word_to_underline(word);
+                            temp += _words[word];
+                            word.clear();
+                        }
+                        break;
+                    }    
+                    if(t[c] == '/' && c != t_size && t[c+1] == '*')// /*
+                    {
+                        _notes_now = true;
+                        ++c;
+                    }
+                }
+            }
             //预编译语句 不要修改
-            if(c == '#' && temp.empty())
+            if(t[c] == '#' && temp.empty())
             {
                 temp = t;
                 break;
             }
             //双引号内字符串不能修改
-            if(c == 34)
+            else if(t[c] == 34)
             {
                 if(state_mark2 == false)
                     state_mark2 = true;
@@ -150,7 +189,7 @@ bool change_code::_change_content(string& temp)
                     state_mark2 = false;
             }
             //单引号
-            else if(c == 39)
+            else if(t[c] == 39)
             {
                 if(state_mark1 == false)
                     state_mark1 = true;
@@ -164,12 +203,10 @@ bool change_code::_change_content(string& temp)
                 temp += _words[word];
                 word.clear();
             }
-            //去多空格
-            if(c == ' ' && (temp.empty() || temp[temp.size()-1] == ' '))
-            {
+            //注释中 || 多空格
+            if(_notes_now || t[c] == ' ' && (temp.empty() || temp[temp.size()-1] == ' '))
                 continue;
-            }
-            temp += c;
+            temp += t[c];
         }
     }
     if(!word.empty())
@@ -218,7 +255,8 @@ void change_code::_argument_number_error_print()
     cout << "欢迎使用本代码混淆器" << endl;
     cout << "by ZHJ" << endl << endl;
     cout << "请确认参数格式是否正确:" << endl;
-    cout << "./line [原文件] [混淆后文件]" << endl;
+    cout << "./line [原文件] [混淆后文件] [-d]" << endl;
+    cout << "-d : 可选参数 删除注释" << endl;
     cout << endl;
 }
 
@@ -228,7 +266,8 @@ void change_code::_input_file_error_print()
     cout << "原文件读取失败" << endl;
     cout << "请确认原文件路径是否正确" << endl << endl;
     cout << "参数格式如下:" << endl;
-    cout << "./line [原文件] [混淆后文件]" << endl;
+    cout << "./line [原文件] [混淆后文件] [-d]" << endl;
+    cout << "-d : 可选参数 删除注释" << endl;
     cout << endl;    
 }
 
@@ -238,7 +277,8 @@ void change_code::_handle_content_error_print()
     cout << "文件内容处理失败" << endl;
     cout << "请向原作者反应 github: @zgg_2001" << endl << endl;
     cout << "参数格式如下:" << endl;
-    cout << "./line [原文件] [混淆后文件]" << endl;
+    cout << "./line [原文件] [混淆后文件] [-d]" << endl;
+    cout << "-d : 可选参数 删除注释" << endl;
     cout << endl;    
 }
 
@@ -248,6 +288,7 @@ void change_code::_write_content_error_print()
     cout << "混淆后内容输出失败" << endl;
     cout << "请确认混淆后文件路径是否正确" << endl << endl;
     cout << "参数格式如下:" << endl;
-    cout << "./line [原文件] [混淆后文件]" << endl;
+    cout << "./line [原文件] [混淆后文件] [-d]" << endl;
+    cout << "-d : 可选参数 删除注释" << endl;
     cout << endl;    
 }
